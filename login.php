@@ -7,8 +7,8 @@ error_reporting(E_ALL);
 // Database connection credentials
 $servername = "localhost";
 $username = "root";
-$password = "iLOVEanime123";
-$dbname = "Final_Project";
+$password = "";
+$dbname = "";
 
 // Connect to the database
 $conn = new mysqli($servername, $username, $password, $dbname);
