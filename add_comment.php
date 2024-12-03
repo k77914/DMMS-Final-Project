@@ -9,9 +9,9 @@ if (!isset($_SESSION['user_id'])) {
 
 // 連接資料庫
 $host = "localhost";
-$dbname = "final_test";
+$dbname = "finalproject";
 $user = "root";
-$password = "";
+$password = "root";
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $password);
