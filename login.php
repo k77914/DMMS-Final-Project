@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "";
+$dbname = "final_test";
 
 // Connect to the database
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['name'] = $row['name_'];
 
                 // Redirect to home page
-                header("Location: home_page.php");
+                header("Location: main.php");
                 exit();
             } else {
                 $error_message = "Incorrect password. Please try again.";
