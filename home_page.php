@@ -105,7 +105,7 @@ $username = $_SESSION['name'];
     <div class="container">
         <!-- Header Section -->
         <div class="header-container">
-            <button class="logout-button" onclick="location.href='login.php';">Logout</button>
+            <button class="logout-button" onclick="location.href='logout.php';">Logout</button>
             <div class="welcome-message">Welcome, <?php echo htmlspecialchars($username); ?></div>
         </div>
         <header class="header">
@@ -123,14 +123,7 @@ $username = $_SESSION['name'];
                 <!-- Card for Manage Comments -->
                 <div class="card">
                     <h3>Manage Comments:</h3>
-                    <button class="button" onclick="location.href='add_comment.php';">Add Comments!</button>
-                    <button class="button" onclick="location.href='delete_comment.php';">Delete Comments!</button>
-                    <button class="button" onclick="location.href='update_comment.php';">Update Comments!</button>
-                </div>
-                <!-- Card for Test Final Project -->
-                <div class="card">
-                    <h3>Test Final Project</h3>
-                    <button class="button" onclick="location.href='final_project.php';">Test 🧪</button>
+                    <button class="button" onclick="location.href='edit_review.php';">Start 🔍</button>
                 </div>
             </div>
         </main>

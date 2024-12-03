@@ -7,13 +7,29 @@ error_reporting(E_ALL);
 // Database connection credentials
 include 'db.php';
 
+// Start a session
+session_start();
+if (isset($_SESSION['user_id'])) {
+    header("Location: home_page.php");
+    exit();
+}
+
+// Connect to the database
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check the database connection
+if ($conn->connect_error) {
+    error_log("Database connection failed: " . $conn->connect_error);
+    die("An unexpected error occurred. Please try again later.");
+}
+
 // Initialize error message
 $error_message = "";
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = trim($_POST['name']);
-    $password_input = trim($_POST['password']);
+    $name = htmlspecialchars(trim($_POST['name']));
+    $password_input = htmlspecialchars(trim($_POST['password']));
 
     if (empty($name) || empty($password_input)) {
         $error_message = "All fields are required.";
@@ -23,7 +39,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $conn->prepare($sql);
 
         if (!$stmt) {
-            die("SQL error: " . $conn->error);
+            error_log("SQL error: " . $conn->error);
+            die("An unexpected error occurred. Please try again later.");
         }
 
         $stmt->bind_param("s", $name);
@@ -36,8 +53,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $hashed_password = $row['password'];
 
             if (password_verify($password_input, $hashed_password)) {
-                // Start a session and set session variables if needed
-                session_start();
+                // Start a session and set session variables
+                session_regenerate_id(true);
                 $_SESSION['user_id'] = $row['id'];
                 $_SESSION['name'] = $row['name_'];
 
@@ -45,6 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 header("Location: home_page.php");
                 exit();
             } else {
+                error_log("Failed login attempt for username: " . $name);
                 $error_message = "Incorrect password. Please try again.";
             }
         } else {
