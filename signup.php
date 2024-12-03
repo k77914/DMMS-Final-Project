@@ -5,18 +5,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Database connection credentials
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "";
-
-// Connect to the database
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check the database connection
-if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
-}
+include 'db.php';
 
 // Initialize error message
 $error_message = "";
