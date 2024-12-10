@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
 // 確保使用者已登錄
@@ -8,16 +12,17 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // 連接資料庫
-$host = 'localhost';
-$dbname = 'final_test';
-$user = 'root';
-$password = '';
+$host = "localhost";
+$dbname = "final_test";
+$user = "root";
+$password = "";
 
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
+// Connect to the database
+$conn = new mysqli($host, $user, $password, $dbname);
+
+// Check the database connection
+if ($conn->connect_error) {
+    die("Database connection failed: " . $conn->connect_error);
 }
 
 // 從 session 獲取搜尋條件
@@ -25,66 +30,100 @@ $search_criteria = $_SESSION['search_criteria'] ?? [];
 
 // 獲取搜尋條件
 $location = $search_criteria['location'] ?? '';
-$property_type = $search_criteria['property_type'] ?? '';
+$number_of_people = $search_criteria['num_people'] ?? 0;
+$number_of_days_stay = $search_criteria['num_days'] ?? 0;
 $room_type = $search_criteria['room_type'] ?? '';
-$number_of_people = $search_criteria['number_of_people'] ?? 0;
-$number_of_days_stay = $search_criteria['number_of_days_stay'] ?? 0;
+$property_type = $search_criteria['property_type'] ?? '';
 
 // 1. 從 calendar 表中找到符合 minimum_nights 和 maximum_nights 的 listing_id
 $query_calendar = "
     SELECT DISTINCT listing_id
     FROM calendar
-    WHERE minimum_nights <= :days_stay AND maximum_nights >= :days_stay
+    WHERE minimum_nights <= ? AND maximum_nights >= ?
 ";
-$stmt = $pdo->prepare($query_calendar);
-$stmt->execute(['days_stay' => $number_of_days_stay]);
-$calendar_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+$stmt = $conn->prepare($query_calendar);
+$stmt->bind_param("ii", $number_of_days_stay, $number_of_days_stay);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $calendar_ids[] = $row['listing_id'];
+}
 
 // 2. 從 listing_location 表中找到符合 neighborhood_group 的 id
 $query_location = "
     SELECT DISTINCT id
-    FROM listing_location
-    WHERE neighborhood_group = :location
+    FROM listings_location
+    WHERE neighbourhood_group = ?
 ";
-$stmt = $pdo->prepare($query_location);
-$stmt->execute(['location' => $location]);
-$location_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+$stmt = $conn->prepare($query_location);
+$stmt->bind_param("s", $location);
+$stmt->execute();
+$result = $stmt->get_result();
+$location_ids = [];
+while ($row = $result->fetch_assoc()) {
+    $location_ids[] = $row['id'];
+}
 
 // 3. 從 listing_detail 表中找到符合條件的 id
 $query_detail = "
-    SELECT DISTINCT id, host_id
-    FROM listing_detail
-    WHERE property_type = :property_type
-      AND room_type = :room_type
-      AND accommodates >= :people
+    SELECT DISTINCT id
+    FROM listings_detail
+    WHERE property_type = ?
+      AND room_type = ?
+      AND accommodates >= ?
 ";
-$stmt = $pdo->prepare($query_detail);
-$stmt->execute([
-    'property_type' => $property_type,
-    'room_type' => $room_type,
-    'people' => $number_of_people,
-]);
-$details = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// 獲取 host_id 和 detail_id
-$detail_ids = array_column($details, 'id');
+$stmt = $conn->prepare($query_detail);
+$stmt->bind_param("ssi", $property_type, $room_type, $number_of_people);
+$stmt->execute();
+$result = $stmt->get_result();
+$detail_ids = [];
+while ($row = $result->fetch_assoc()) {
+    $detail_ids[] = $row['id'];
+}
 
 // 取三個集合的交集
 $s = array_intersect($calendar_ids, $location_ids, $detail_ids);
+if (empty($s)) {
+    die("No results match the search criteria.");
+}
 
-// 獲取符合條件的 Airbnb 資訊
+// 獲取符合條件的 Airbnb 資訊 /
+$in_placeholders = implode(',', array_fill(0, count($s), '?'));
 $query_airbnb = "
-    SELECT ld.id, ld.name_ AS name, lr.review_score_rating, c.adjusted_price
-    FROM listing_detail ld
-    LEFT JOIN listing_review_score lr ON ld.id = lr.id
-    LEFT JOIN calendar c ON ld.id = c.listing_id
-    WHERE ld.id IN (" . implode(',', array_fill(0, count($s), '?')) . ")
-      AND c.date_ = :days_stay
-    ORDER BY lr.review_score_rating ASC
+    SELECT 
+        ld.id, 
+        ld.name_ AS name, 
+        lr.review_scores_rating, 
+        c.adjusted_price
+    FROM listings_detail ld
+    LEFT JOIN listings_review_score lr ON ld.id = lr.id
+    LEFT JOIN (
+        SELECT 
+            listing_id, 
+            adjusted_price
+        FROM calendar
+        WHERE (listing_id, date_) IN (
+            SELECT 
+                listing_id, 
+                MAX(date_) AS latest_date
+            FROM calendar
+            GROUP BY listing_id
+        )
+    ) c ON ld.id = c.listing_id
+    WHERE ld.id IN ($in_placeholders)
+    ORDER BY lr.review_scores_rating DESC
 ";
-$stmt = $pdo->prepare($query_airbnb);
-$stmt->execute(array_merge($s, ['days_stay' => $number_of_days_stay]));
-$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare($query_airbnb);
+$stmt->bind_param(str_repeat('i', count($s)), ...$s);
+$stmt->execute();
+$results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+if (empty($search_criteria)) {
+    header("Location: search_hotel.php");
+    exit();
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -172,7 +211,7 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <?php foreach ($results as $result): ?>
                         <tr>
                             <td><?= htmlspecialchars($result['name']) ?></td>
-                            <td><?= htmlspecialchars($result['review_score_rating']) ?></td>
+                            <td><?= htmlspecialchars($result['review_scores_rating']) ?></td>
                             <td><?= htmlspecialchars($result['adjusted_price']) ?></td>
                             <td><a href="details.php?id=<?= $result['id'] ?>" class="btn">Check Details</a></td>
                         </tr>
