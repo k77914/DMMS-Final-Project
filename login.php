@@ -5,17 +5,22 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Database connection credentials
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "final_test";
+include 'db.php';
+
+// Start a session
+session_start();
+if (isset($_SESSION['user_id'])) {
+    header("Location: home_page.php");
+    exit();
+}
 
 // Connect to the database
 $conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check the database connection
 if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
+    error_log("Database connection failed: " . $conn->connect_error);
+    die("An unexpected error occurred. Please try again later.");
 }
 
 // Initialize error message
@@ -23,8 +28,8 @@ $error_message = "";
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = trim($_POST['name']);
-    $password_input = trim($_POST['password']);
+    $name = htmlspecialchars(trim($_POST['name']));
+    $password_input = htmlspecialchars(trim($_POST['password']));
 
     if (empty($name) || empty($password_input)) {
         $error_message = "All fields are required.";
@@ -34,7 +39,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = $conn->prepare($sql);
 
         if (!$stmt) {
-            die("SQL error: " . $conn->error);
+            error_log("SQL error: " . $conn->error);
+            die("An unexpected error occurred. Please try again later.");
         }
 
         $stmt->bind_param("s", $name);
@@ -47,15 +53,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $hashed_password = $row['password'];
 
             if (password_verify($password_input, $hashed_password)) {
-                // Start a session and set session variables if needed
-                session_start();
+                // Start a session and set session variables
+                session_regenerate_id(true);
                 $_SESSION['user_id'] = $row['id'];
                 $_SESSION['name'] = $row['name_'];
-
+                $_SESSION['pass'] = $row['password'];
                 // Redirect to home page
-                header("Location: main.php");
+                header("Location: home_page.php");
                 exit();
             } else {
+                error_log("Failed login attempt for username: " . $name);
                 $error_message = "Incorrect password. Please try again.";
             }
         } else {
@@ -76,9 +83,11 @@ $conn->close();
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-            background-color: #F5F5F7;
+            background-image: url("AirBnB_mainpage_image.webp");
+            background-size: cover;
             margin: 0;
             padding: 0;
+
         }
         .container {
             max-width: 400px;
@@ -89,6 +98,12 @@ $conn->close();
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
         h1 {
+            font-weight: 600;
+            color: #1D1D1F;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
             font-weight: 600;
             color: #1D1D1F;
             text-align: center;
@@ -145,7 +160,8 @@ $conn->close();
 </head>
 <body>
     <div class="container">
-        <h1>Sign In with your Account!</h1>
+        <h1>Welcome NYC's AirBnB</h1>
+        <h2>Sign In with your Account!</h1>
         <?php if (!empty($error_message)): ?>
             <div class="error"><?php echo htmlspecialchars($error_message); ?></div>
         <?php endif; ?>
