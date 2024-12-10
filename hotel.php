@@ -12,13 +12,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // 連接資料庫
-$host = "localhost";
-$dbname = "final_test";
-$user = "root";
-$password = "";
+include 'db.php';
 
 // Connect to the database
-$conn = new mysqli($host, $user, $password, $dbname);
+$conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check the database connection
 if ($conn->connect_error) {
@@ -84,7 +81,8 @@ while ($row = $result->fetch_assoc()) {
 // 取三個集合的交集
 $s = array_intersect($calendar_ids, $location_ids, $detail_ids);
 if (empty($s)) {
-    die("No results match the search criteria.");
+    header("Location: no_meets.php");
+    exit();
 }
 
 // 獲取符合條件的 Airbnb 資訊 /
@@ -112,6 +110,7 @@ $query_airbnb = "
     ) c ON ld.id = c.listing_id
     WHERE ld.id IN ($in_placeholders)
     ORDER BY lr.review_scores_rating DESC
+    LIMIT 50
 ";
 
 $stmt = $conn->prepare($query_airbnb);
@@ -162,6 +161,7 @@ if (empty($search_criteria)) {
         }
         h1 {
             text-align: center;
+            color: #333;
         }
         table {
             width: 100%;
@@ -189,21 +189,30 @@ if (empty($search_criteria)) {
         .btn:hover {
             background-color: #005BB5;
         }
+        .error-message {
+            color: red;
+        }
+        .success-message {
+            color: green;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <a href="main.php">Back to Home</a>
+        <a href="home_page.php">Back to Home</a>
     </div>
     <div class="container">
         <h1>Airbnbs That Meet Your Requirements</h1>
+        <?php if (!empty($_SESSION['message'])): ?>
+            <p class="success-message"><?= htmlspecialchars($_SESSION['message']); unset($_SESSION['message']); ?></p>
+        <?php endif; ?>
         <table>
             <thead>
                 <tr>
                     <th>Airbnb Name</th>
                     <th>Rating</th>
                     <th>Price</th>
-                    <th>Action</th>
+                    <th>Check Details</th>
                 </tr>
             </thead>
             <tbody>
