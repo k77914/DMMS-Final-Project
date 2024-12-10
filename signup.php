@@ -7,6 +7,14 @@ error_reporting(E_ALL);
 // Database connection credentials
 include 'db.php';
 
+// Connect to the database
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check the database connection
+if ($conn->connect_error) {
+    die("Database connection failed: " . $conn->connect_error);
+}
+
 // Initialize error message
 $error_message = "";
 

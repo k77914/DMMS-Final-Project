@@ -57,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 session_regenerate_id(true);
                 $_SESSION['user_id'] = $row['id'];
                 $_SESSION['name'] = $row['name_'];
-
+                $_SESSION['pass'] = $row['password'];
                 // Redirect to home page
                 header("Location: home_page.php");
                 exit();
@@ -83,9 +83,11 @@ $conn->close();
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-            background-color: #F5F5F7;
+            background-image: url("AirBnB_mainpage_image.webp");
+            background-size: cover;
             margin: 0;
             padding: 0;
+
         }
         .container {
             max-width: 400px;
@@ -96,6 +98,12 @@ $conn->close();
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
         h1 {
+            font-weight: 600;
+            color: #1D1D1F;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
             font-weight: 600;
             color: #1D1D1F;
             text-align: center;
@@ -152,7 +160,8 @@ $conn->close();
 </head>
 <body>
     <div class="container">
-        <h1>Sign In with your Account!</h1>
+        <h1>Welcome NYC's AirBnB</h1>
+        <h2>Sign In with your Account!</h1>
         <?php if (!empty($error_message)): ?>
             <div class="error"><?php echo htmlspecialchars($error_message); ?></div>
         <?php endif; ?>

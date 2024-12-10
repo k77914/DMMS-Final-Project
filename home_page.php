@@ -109,16 +109,19 @@ $username = $_SESSION['name'];
             <div class="welcome-message">Welcome, <?php echo htmlspecialchars($username); ?></div>
         </div>
         <header class="header">
-            <h1>Home Page: Your Best Guide to Find Hotels in New York City!</h1>
+            <h1>Your Best Guide to Find Hotels in New York City!</h1>
         </header>
         <main class="main">
             <h2>Welcome!</h2>
             <p>What would you like to do today?</p>
+            <?php if (!empty($_SESSION['message'])): ?>
+                <p class="success-message"><?= htmlspecialchars($_SESSION['message']); unset($_SESSION['message']); ?></p>
+            <?php endif; ?>
             <div class="function-cards">
                 <!-- Card for Accommodation -->
                 <div class="card">
                     <h3>Find accommodation in NYC!</h3>
-                    <button class="button" onclick="location.href='find_accommodation.html';">Start 🔍</button>
+                    <button class="button" onclick="location.href='search_hotel.php';">Start 🔍</button>
                 </div>
                 <!-- Card for Manage Comments -->
                 <div class="card">

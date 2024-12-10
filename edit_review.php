@@ -1,73 +1,69 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
-// 確保使用者已登錄
+// Ensure the user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// 連接資料庫
-$host = 'localhost';
-$dbname = 'final_test';
-$user = 'root';
-$password = '';
+include 'db.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $password);
+    $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }
 
-// 獲取 Airbnb ID
-$id = $_GET['id'] ?? null;
-if (!$id) {
-    sleep(1);
-    header("Location: main.php");
-    exit();
-}
+// Get the logged-in user's information
+$user_id = $_SESSION['user_id'];
+$username = $_SESSION['name'];
 
-// 查詢 Airbnb 名稱
-$query = "SELECT name_ AS airbnb_name FROM listing_detail WHERE id = :id";
+// Fetch user reviews
+$query = "
+    SELECT rd.id AS review_id, rd.date_, rd.comments, ld.name_ AS airbnb_name, rd.listing_id 
+    FROM review_detail rd
+    JOIN listings_detail ld ON rd.listing_id = ld.id
+    WHERE rd.reviewer_id = :reviewer_id AND rd.reviewer_name = :reviewer_name
+    ORDER BY rd.date_ DESC
+";
 $stmt = $pdo->prepare($query);
-$stmt->execute(['id' => $id]);
-$airbnb = $stmt->fetch(PDO::FETCH_ASSOC);
-$airbnb_name = $airbnb['airbnb_name'] ?? 'Airbnb';
+$stmt->execute([
+    'reviewer_id' => $user_id,
+    'reviewer_name' => $username,
+]);
+$reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 處理表單提交
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $reviewer_id = $_POST['reviewer_id'] ?? '';
-    $reviewer_name = $_POST['reviewer_name'] ?? '';
-    $comments = $_POST['comments'] ?? '';
+// Handle delete request
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_review'])) {
+    $review_id = $_POST['review_id'];
+    $listing_id = $_POST['listing_id'];
 
-    if ($reviewer_id && $reviewer_name && $comments) {
-        $random_id = bin2hex(random_bytes(4));
-        $date_ = date('Y-m-d H:i:s');
+    try {
+        // Delete the review
+        $delete_query = "DELETE FROM review_detail WHERE id = :review_id";
+        $stmt = $pdo->prepare($delete_query);
+        $stmt->execute(['review_id' => $review_id]);
 
-        $insert_query = "
-            INSERT INTO review_detail (id, listing_id, date_, reviewer_id, reviewer_name, comments)
-            VALUES (:id, :listing_id, :date_, :reviewer_id, :reviewer_name, :comments)
+        // Decrement the number_of_reviews in listings_review_score
+        $update_query = "
+            UPDATE listings_review_score 
+            SET number_of_reviews = number_of_reviews - 1
+            WHERE id = :listing_id
         ";
-        $stmt = $pdo->prepare($insert_query);
+        $stmt = $pdo->prepare($update_query);
+        $stmt->execute(['listing_id' => $listing_id]);
 
-        try {
-            $stmt->execute([
-                'id' => $random_id,
-                'listing_id' => $id,
-                'date_' => $date_,
-                'reviewer_id' => $reviewer_id,
-                'reviewer_name' => $reviewer_name,
-                'comments' => $comments
-            ]);
-            $_SESSION['message'] = 'Review added successfully!';
-            header("Location: main.php");
-            exit();
-        } catch (PDOException $e) {
-            $error_message = "Failed to add review: " . $e->getMessage();
-        }
-    } else {
-        $error_message = "All fields are required!";
+        $_SESSION['message'] = "Review deleted successfully!";
+        header("Location: edit_review.php");
+        exit();
+    } catch (PDOException $e) {
+        $error_message = "Failed to delete review: " . $e->getMessage();
     }
 }
 ?>
@@ -77,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enter the comment about <?= htmlspecialchars($airbnb_name) ?></title>
+    <title>Manage Your Reviews</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -98,11 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-left: 20px;
         }
         .container {
-            margin: 40px auto;
+            margin: 20px auto;
             width: 90%;
-            max-width: 600px;
+            max-width: 800px;
             background: white;
-            padding: 20px 30px;
+            padding: 30px 30px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
@@ -110,27 +106,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             text-align: center;
             color: #333;
         }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #555;
-        }
-        .form-group input, .form-group textarea {
+        table {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
-        .form-group textarea {
-            resize: vertical;
+        table th, table td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        table th {
+            background-color: #007AFF;
+            color: white;
         }
         .btn {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 10px 10px;
             background-color: #007AFF;
             color: white;
             text-decoration: none;
@@ -143,39 +135,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .btn:hover {
             background-color: #005BB5;
         }
-        .error-message {
-            color: red;
+        .error-message, .success-message {
             font-size: 14px;
             margin-bottom: 15px;
+        }
+        .error-message {
+            color: red;
+        }
+        .success-message {
+            color: #78B142;
+            font-weight: bold;
+            
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <a href="main.php">Back to Home</a>
+        <a href="home_page.php">Back to Home</a>
     </div>
     <div class="container">
-        <h1>Enter the comment about <?= htmlspecialchars($airbnb_name) ?></h1>
+        <h1>Manage Your Reviews</h1>
 
-        <?php if (!empty($error_message)): ?>
-            <p class="error-message"><?= htmlspecialchars($error_message) ?></p>
+        <?php if (!empty($_SESSION['message'])): ?>
+            <p class="success-message"><?= htmlspecialchars($_SESSION['message']); unset($_SESSION['message']); ?></p>
         <?php endif; ?>
 
-        <form method="POST">
-            <div class="form-group">
-                <label for="reviewer_id">Reviewer ID (Password):</label>
-                <input type="text" id="reviewer_id" name="reviewer_id" required>
-            </div>
-            <div class="form-group">
-                <label for="reviewer_name">Reviewer Name:</label>
-                <input type="text" id="reviewer_name" name="reviewer_name" required>
-            </div>
-            <div class="form-group">
-                <label for="comments">Comment:</label>
-                <textarea id="comments" name="comments" rows="5" required></textarea>
-            </div>
-            <button type="submit" class="btn">Add Review</button>
-        </form>
+        <?php if (!empty($error_message)): ?>
+            <p class="error-message"><?= htmlspecialchars($error_message); ?></p>
+        <?php endif; ?>
+
+        <?php if ($reviews): ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Airbnb Name</th>
+                        <th>Comment</th>
+                        <th>Delete</th>
+                        <th>Modify</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($reviews as $review): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($review['date_']); ?></td>
+                            <td><?= htmlspecialchars($review['airbnb_name']); ?></td>
+                            <td><?= htmlspecialchars($review['comments']); ?></td>
+                            <td>
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="review_id" value="<?= htmlspecialchars($review['review_id']); ?>">
+                                    <input type="hidden" name="listing_id" value="<?= htmlspecialchars($review['listing_id']); ?>">
+                                    <button type="submit" name="delete_review" class="btn">Delete</button>
+                                </form>
+                            </td>
+                            <td>
+                                <a href="modify_review.php?review_id=<?= urlencode($review['review_id']); ?>" class="btn">Modify</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <p>No previous reviews found.</p>
+        <?php endif; ?>
     </div>
 </body>
 </html>
+

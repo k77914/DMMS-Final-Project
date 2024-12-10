@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>No Comments Yet</title>
+    <title>No Airbnb meets your requirements</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -47,10 +47,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>No Comments Found</h1>
-        <p>It looks like you haven’t left any comments yet.</p>
-        <a href="home_page.php" class="btn">Return to Home</a>
+        <h1>No Airbnb Found</h1>
+        <p>No Airbnb meets your requirements.</p>
+        <a href="search_hotel.php" class="btn">Return to search page</a>
     </div>
 </body>
-</html>
 </html>
