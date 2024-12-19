@@ -13,10 +13,6 @@ if (!isset($_SESSION['user_id'])) {
 
 // 連接資料庫
 include 'db.php';
-$host = "localhost";
-$dbname = "finalproject";
-$user = "root";
-$password = "root";
 
 try {
     $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
