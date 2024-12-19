@@ -50,11 +50,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         .header {
             background-color: #007AFF;
+            color: white;   
             padding: 15px;
+            font-size: 15px;
             text-align: right;
         }
         .header a {
             color: white;
+            font-weight: bold;
             text-decoration: none;
             font-size: 16px;
             font-weight: 600;
