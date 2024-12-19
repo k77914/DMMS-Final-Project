@@ -221,6 +221,10 @@ $host = $stmt->fetch(PDO::FETCH_ASSOC);
             <p><strong>Number of Reviews:</strong> <?= htmlspecialchars($review_scores['number_of_reviews'] ?? 'N/A') ?></p>
             <p><strong>Rating:</strong> <?= htmlspecialchars($review_scores['review_scores_rating'] ?? 'N/A') ?></p>
             <p><strong>Accuracy:</strong> <?= htmlspecialchars($review_scores['review_scores_accuracy'] ?? 'N/A') ?></p>
+            <p><strong>Cleanliness:</strong> <?= htmlspecialchars($review_scores['review_scores_cleanliness'] ?? 'N/A') ?></p>
+            <p><strong>Check-in:</strong> <?= htmlspecialchars($review_scores['review_scores_checkin'] ?? 'N/A') ?></p>
+            <p><strong>Communication:</strong> <?= htmlspecialchars($review_scores['review_scores_communication'] ?? 'N/A') ?></p>
+            <p><strong>Location:</strong> <?= htmlspecialchars($review_scores['review_scores_location'] ?? 'N/A') ?></p>
             <h3>Comments:</h3>
             <?php 
             $show_more_comments = count($reviews) > 5;
