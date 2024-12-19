@@ -160,7 +160,7 @@ $conn->close();
 </head>
 <body>
     <div class="container">
-        <h1>Welcome NYC's AirBnB</h1>
+        <h1>Your Best Guide to Find Hotels in New York City!</h1>
         <h2>Sign In with your Account!</h1>
         <?php if (!empty($error_message)): ?>
             <div class="error"><?php echo htmlspecialchars($error_message); ?></div>

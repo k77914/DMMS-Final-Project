@@ -7,7 +7,7 @@ session_start();
 
 // 確保使用者已登錄
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php"); // 未登錄則重定向至登入頁面
+    header("Location: login.php");
     exit();
 }
 
@@ -32,6 +32,25 @@ $number_of_days_stay = $search_criteria['num_days'] ?? 0;
 $room_type = $search_criteria['room_type'] ?? '';
 $property_type = $search_criteria['property_type'] ?? '';
 
+// 排序參數
+$valid_sort_options = [
+    'price_asc' => 'c.adjusted_price ASC',
+    'price_desc' => 'c.adjusted_price DESC',
+    'rating_asc' => 'lr.review_scores_rating ASC',
+    'rating_desc' => 'lr.review_scores_rating DESC',
+    'value_asc' => '(lr.review_scores_rating / c.adjusted_price) ASC',
+    'value_desc' => '(lr.review_scores_rating / c.adjusted_price) DESC',
+];
+
+// 默認排序方式
+$sort_by = $_GET['sort_by'] ?? 'rating_desc';
+$order_clause = $valid_sort_options[$sort_by] ?? $valid_sort_options['rating_desc'];
+
+// 分頁參數
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$items_per_page = 30;
+$offset = ($page - 1) * $items_per_page;
+
 // 1. 從 calendar 表中找到符合 minimum_nights 和 maximum_nights 的 listing_id
 $query_calendar = "
     SELECT DISTINCT listing_id
@@ -42,6 +61,7 @@ $stmt = $conn->prepare($query_calendar);
 $stmt->bind_param("ii", $number_of_days_stay, $number_of_days_stay);
 $stmt->execute();
 $result = $stmt->get_result();
+$calendar_ids = [];
 while ($row = $result->fetch_assoc()) {
     $calendar_ids[] = $row['listing_id'];
 }
@@ -65,9 +85,7 @@ while ($row = $result->fetch_assoc()) {
 $query_detail = "
     SELECT DISTINCT id
     FROM listings_detail
-    WHERE property_type = ?
-      AND room_type = ?
-      AND accommodates >= ?
+    WHERE property_type = ? AND room_type = ? AND accommodates >= ?
 ";
 $stmt = $conn->prepare($query_detail);
 $stmt->bind_param("ssi", $property_type, $room_type, $number_of_people);
@@ -85,7 +103,7 @@ if (empty($s)) {
     exit();
 }
 
-// 獲取符合條件的 Airbnb 資訊 /
+// 獲取符合條件的 Airbnb 資訊
 $in_placeholders = implode(',', array_fill(0, count($s), '?'));
 $query_airbnb = "
     SELECT 
@@ -109,14 +127,19 @@ $query_airbnb = "
         )
     ) c ON ld.id = c.listing_id
     WHERE ld.id IN ($in_placeholders)
-    ORDER BY lr.review_scores_rating DESC
-    LIMIT 50
+    ORDER BY $order_clause
+    LIMIT ? OFFSET ?
 ";
 
+$params = array_merge($s, [$items_per_page, $offset]);
 $stmt = $conn->prepare($query_airbnb);
-$stmt->bind_param(str_repeat('i', count($s)), ...$s);
+$stmt->bind_param(str_repeat('i', count($s)) . "ii", ...$params);
 $stmt->execute();
 $results = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// 計算總數以生成分頁
+$total_count = count($s);
+$total_pages = ceil($total_count / $items_per_page);
 
 if (empty($search_criteria)) {
     header("Location: search_hotel.php");
@@ -195,6 +218,15 @@ if (empty($search_criteria)) {
         .success-message {
             color: green;
         }
+        .pagination a {
+            margin: 0 5px;
+            text-decoration: none;
+            color: #007AFF;
+        }
+        .pagination a.active {
+            font-weight: bold;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -203,35 +235,56 @@ if (empty($search_criteria)) {
     </div>
     <div class="container">
         <h1>Airbnbs That Meet Your Requirements</h1>
-        <?php if (!empty($_SESSION['message'])): ?>
-            <p class="success-message"><?= htmlspecialchars($_SESSION['message']); unset($_SESSION['message']); ?></p>
-        <?php endif; ?>
-        <table>
-            <thead>
-                <tr>
-                    <th>Airbnb Name</th>
-                    <th>Rating</th>
-                    <th>Price</th>
-                    <th>Check Details</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($results)): ?>
-                    <?php foreach ($results as $result): ?>
+        <form method="GET" action="">
+            <label for="sort_by">Sort By:</label>
+            <select name="sort_by" id="sort_by">
+                <option value="price_asc" <?= $sort_by === 'price_asc' ? 'selected' : '' ?>>Price (Low to High)</option>
+                <option value="price_desc" <?= $sort_by === 'price_desc' ? 'selected' : '' ?>>Price (High to Low)</option>
+                <option value="rating_asc" <?= $sort_by === 'rating_asc' ? 'selected' : '' ?>>Rating (Low to High)</option>
+                <option value="rating_desc" <?= $sort_by === 'rating_desc' ? 'selected' : '' ?>>Rating (High to Low)</option>
+                <option value="value_asc" <?= $sort_by === 'value_asc' ? 'selected' : '' ?>>Value (Low to High)</option>
+                <option value="value_desc" <?= $sort_by === 'value_desc' ? 'selected' : '' ?>>Value (High to Low)</option>
+            </select>
+            <button type="submit">Apply</button>
+        </form>
+        <?php if (empty($results)) : ?>
+            <p class="error-message">No results found. Please adjust your search criteria.</p>
+        <?php else : ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Rating</th>
+                        <th>Price</th>
+                        <th>Check Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($results as $row) : ?>
                         <tr>
-                            <td><?= htmlspecialchars($result['name']) ?></td>
-                            <td><?= htmlspecialchars($result['review_scores_rating']) ?></td>
-                            <td><?= htmlspecialchars($result['adjusted_price']) ?></td>
-                            <td><a href="details.php?id=<?= $result['id'] ?>" class="btn">Check Details</a></td>
+                            <td><?php echo htmlspecialchars($row['name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['review_scores_rating'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($row['adjusted_price'] ?? 'N/A'); ?></td>
+                            <td>
+                                <a href="details.php?id=<?php echo htmlspecialchars($row['id']); ?>" class="btn">Check Details</a>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="4">No results found for your criteria.</td>
-                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination">
+                <?php if ($page > 1) : ?>
+                    <a href="?page=<?php echo $page - 1; ?>&sort_by=<?php echo $sort_by; ?>">Previous</a>
                 <?php endif; ?>
-            </tbody>
-        </table>
+                <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
+                    <a href="?page=<?php echo $i; ?>&sort_by=<?php echo $sort_by; ?>" class="<?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                <?php endfor; ?>
+                <?php if ($page < $total_pages) : ?>
+                    <a href="?page=<?php echo $page + 1; ?>&sort_by=<?php echo $sort_by; ?>">Next</a>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+        <a href="search_hotel.php" class="btn">New Search</a>
     </div>
 </body>
 </html>
