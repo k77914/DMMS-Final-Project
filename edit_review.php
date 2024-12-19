@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_review'])) {
             color: white;
             padding: 15px 20px;
             text-align: right;
+            font-size: 15px;
         }
         .header a {
             color: white;
@@ -96,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_review'])) {
         .container {
             margin: 20px auto;
             width: 90%;
-            max-width: 800px;
+            max-width: 1000px;
             background: white;
             padding: 30px 30px;
             border-radius: 10px;
@@ -121,6 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_review'])) {
             color: white;
         }
         .btn {
+            font-size: 15px;
             display: inline-block;
             padding: 10px 10px;
             background-color: #007AFF;
