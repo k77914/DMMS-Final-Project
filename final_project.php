@@ -9,18 +9,7 @@ include 'header.php';
 <p>
     <?php
     // Database connection details
-    $servername = "localhost";
-    $username = "root"; // Replace with your MySQL username
-    $password = "<pwd>"; // Replace with your MySQL password
-    $dbname = "Final_Project";
-
-    // Create a connection
-    $conn = new mysqli($servername, $username, $password, $dbname);
-
-    // Check the connection
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
+    include 'db.php';
     echo "Connected successfully! OwO<br>";
 
     // Fetch data
@@ -41,7 +30,7 @@ include 'header.php';
     ?>
 </p>
 
-<button class="start-button" onclick="location.href='home_page.html';">Back to Home</button>
+<button class="start-button" onclick="location.href='home_page.php';">Back to Home</button>
 
 <?php
 // Include the footer file
