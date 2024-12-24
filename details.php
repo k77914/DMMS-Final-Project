@@ -219,12 +219,12 @@ $host = $stmt->fetch(PDO::FETCH_ASSOC);
         <div class="section">
             <h2>Listing Reviews:</h2>
             <p><strong>Number of Reviews:</strong> <?= htmlspecialchars($review_scores['number_of_reviews'] ?? 'N/A') ?></p>
-            <p><strong>Rating:</strong> <?= htmlspecialchars($review_scores['review_scores_rating'] ?? 'N/A') ?></p>
-            <p><strong>Accuracy:</strong> <?= htmlspecialchars($review_scores['review_scores_accuracy'] ?? 'N/A') ?></p>
-            <p><strong>Cleanliness:</strong> <?= htmlspecialchars($review_scores['review_scores_cleanliness'] ?? 'N/A') ?></p>
-            <p><strong>Check-in:</strong> <?= htmlspecialchars($review_scores['review_scores_checkin'] ?? 'N/A') ?></p>
-            <p><strong>Communication:</strong> <?= htmlspecialchars($review_scores['review_scores_communication'] ?? 'N/A') ?></p>
-            <p><strong>Location:</strong> <?= htmlspecialchars($review_scores['review_scores_location'] ?? 'N/A') ?></p>
+            <p><strong>Rating:</strong> <?= htmlspecialchars($review_scores['review_scores_rating'] ?? 'N/A') ?> / 5</p>
+            <p><strong>Accuracy:</strong> <?= htmlspecialchars($review_scores['review_scores_accuracy'] ?? 'N/A') ?> / 5</p>
+            <p><strong>Cleanliness:</strong> <?= htmlspecialchars($review_scores['review_scores_cleanliness'] ?? 'N/A') ?> / 5</p>
+            <p><strong>Check-in:</strong> <?= htmlspecialchars($review_scores['review_scores_checkin'] ?? 'N/A') ?> / 5</p>
+            <p><strong>Communication:</strong> <?= htmlspecialchars($review_scores['review_scores_communication'] ?? 'N/A') ?> / 5</p>
+            <p><strong>Location:</strong> <?= htmlspecialchars($review_scores['review_scores_location'] ?? 'N/A') ?> / 5</p>
             <h3>Comments:</h3>
             <?php 
             $show_more_comments = count($reviews) > 5;
