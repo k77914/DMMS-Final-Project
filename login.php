@@ -156,12 +156,20 @@ $conn->close();
         .link a:hover {
             text-decoration: underline;
         }
+        .success-message {
+            color: #78B142;
+            font-weight: bold;
+            
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Your Best Guide to Find Hotels in New York City!</h1>
         <h2>Sign In with your Account!</h1>
+        <?php if (!empty($_SESSION['message'])): ?>
+            <p class="success-message"><?= htmlspecialchars($_SESSION['message']); unset($_SESSION['message']); ?></p>
+        <?php endif; ?>
         <?php if (!empty($error_message)): ?>
             <div class="error"><?php echo htmlspecialchars($error_message); ?></div>
         <?php endif; ?>

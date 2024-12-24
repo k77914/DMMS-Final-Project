@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 // Database connection credentials
 include 'db.php';
+session_start();
 
 // Connect to the database
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -58,6 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($insert_stmt->execute()) {
                 // Account created, redirect to login page
+                $_SESSION['message'] = 'Account created successfully!';
                 header("Location: login.php");
                 exit();
             } else {
