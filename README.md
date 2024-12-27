@@ -22,12 +22,33 @@
     >此資料檔案主要儲存AirBNB的經緯座標
 ### Where is the data from
 資料集來自於kaggle上的[Inside AirBnB-USA](https://www.kaggle.com/datasets/konradb/inside-airbnb-usa)
+###ER model
+![image](https://github.com/user-attachments/assets/24ca21ae-b2f0-4920-b170-b2d1f8612835)
+###Tables
+![image](https://github.com/user-attachments/assets/6a22cc4b-4223-4818-99b4-f3a6bf3a94b5)
+##Applications
+1. sign in page
+![image](https://github.com/user-attachments/assets/834461f5-f954-49ef-baa4-7568e628e1a2)
+2. sign up page
+![image](https://github.com/user-attachments/assets/64b97037-4b15-4d38-b6fb-ca046d602c50)
+3. home page
+![image](https://github.com/user-attachments/assets/552b5185-1a75-4b1a-8edd-2f004450741b)
+4. serch hotel page
+![image](https://github.com/user-attachments/assets/57c60e5f-0475-4b9d-b468-75759a513fb0)
+5. hotel page1
+![image](https://github.com/user-attachments/assets/92cb4325-c284-4fa6-bfc0-1aab1f3e2fa3)
+6. hotel page2
+![image](https://github.com/user-attachments/assets/80139894-dcb5-4845-a888-804cf5090f80)
+7. details page
+![image](https://github.com/user-attachments/assets/75de12bc-692f-4ed8-bd12-99ce100b3bc8)
+8. add comment page
+![image](https://github.com/user-attachments/assets/2d592c16-2d04-4193-b07a-d8ac143e67b5)
+9. edit review page
+![image](https://github.com/user-attachments/assets/d7420fdd-daa2-40c4-b4a4-b4b0287eff4f)
+10. modify review page
+![image](https://github.com/user-attachments/assets/b167b625-d1c4-4002-80bf-97a013a724d9)
 
-```
-UPDATE hotel_reviews 
-SET comments = REPLACE(REPLACE(comments, '</br>', ''), '<br/>', '');
-```
-    
+
 
 
 
