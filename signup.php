@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $error_message = "Username already exists. Please choose another.";
         } else {
             // Hash the password
-            $hashed_password = password_hash($password_input, PASSWORD_DEFAULT);
+            $hashed_password = hash('sha256',$password_input);
 
             // Generate a unique ID for the user
             $user_id = uniqid();
