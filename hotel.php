@@ -62,7 +62,7 @@ $stmt->bind_param("ii", $number_of_days_stay, $number_of_days_stay);
 $stmt->execute();
 $result = $stmt->get_result();
 $calendar_ids = [];
-while ($row = $result->fetch_assoc()) {
+while ($row = $result->fetch_assoc()){
     $calendar_ids[] = $row['listing_id'];
 }
 
@@ -152,7 +152,7 @@ if (empty($search_criteria)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Search Results</title>
+    <title>AirBnB Search Results</title>
     <!-- CSS Style -->
     <style>
         body {
@@ -234,7 +234,7 @@ if (empty($search_criteria)) {
         <a href="home_page.php">Back to Home</a>
     </div>
     <div class="container">
-        <h1>Airbnbs That Meet Your Requirements</h1>
+        <h1>AirBnBs That Meet Your Requirements</h1>
         <form method="GET" action="">
             <label for="sort_by">Sort By:</label>
             <select name="sort_by" id="sort_by">
