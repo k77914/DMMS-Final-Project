@@ -170,7 +170,7 @@ $host = $stmt->fetch(PDO::FETCH_ASSOC);
     </div>
     <div class="container">
         <h1>
-            Details about Airbnb:
+            Details about AirBnB:
             <br>
             <span style="font-size: inherit; color: inherit;">
                 <?= htmlspecialchars($detail['airbnb_name'] ?? 'Airbnb') ?>
