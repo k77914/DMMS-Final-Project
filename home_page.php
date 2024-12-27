@@ -109,7 +109,7 @@ $username = $_SESSION['name'];
             <div class="welcome-message">Welcome, <?php echo htmlspecialchars($username); ?></div>
         </div>
         <header class="header">
-            <h1>Your Best Guide to Find Hotels in New York City!</h1>
+            <h1>Your Best Guide to Find AirBnBs in New York City!</h1>
         </header>
         <main class="main">
             <h2>Welcome!</h2>
