@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $row = $result->fetch_assoc();
             $hashed_password = $row['password'];
 
-            if (password_verify($password_input, $hashed_password)) {
+            if (hash('sha256', $password_input) == $hashed_password) {
                 // Start a session and set session variables
                 session_regenerate_id(true);
                 $_SESSION['user_id'] = $row['id'];
@@ -165,7 +165,7 @@ $conn->close();
 </head>
 <body>
     <div class="container">
-        <h1>Your Best Guide to Find Hotels in New York City!</h1>
+        <h1>Your Best Guide to Find AirBnB in New York City!</h1>
         <h2>Sign In with your Account!</h1>
         <?php if (!empty($_SESSION['message'])): ?>
             <p class="success-message"><?= htmlspecialchars($_SESSION['message']); unset($_SESSION['message']); ?></p>
